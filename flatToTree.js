@@ -6,6 +6,22 @@
   {id: 4, name: '部门4', pid: 3},
   {id: 5, name: '部门5', pid: 4},
 ]
+**/
+function flatToTreeByRecursion(arr) {
+  let arr = [
+    {id: 2, name: '部门2', pid: 1},
+    {id: 1, name: '部门1', pid: 0},
+    {id: 3, name: '部门3', pid: 1},
+    {id: 4, name: '部门4', pid: 3},
+    {id: 5, name: '部门5', pid: 4},
+  ]
+  const topId = Math.min(...arr.map((item) => item.pid))
+  const topNode = arr.find((item) => item.pid === topId)
+  if (topNode) {
+    
+  }
+}
+/**
 {
   2: { id: 2, name: '部门2', pid: 1, children: [] },
   1: { id: 1, name: '部门1', pid: 0, children: [] },
