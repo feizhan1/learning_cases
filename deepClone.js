@@ -1,22 +1,22 @@
 /**
  * @description: 可继续遍历的数据类型
 */
-const mapTag = '[object Map]'
-const setTag = '[object Set]'
-const arrayTag = '[object Array]'
-const objectTag = '[object Object]'
+const mapTag = 'Map'
+const setTag = 'Set'
+const arrayTag = 'Array'
+const objectTag = 'Object'
 
 /**
  * @description: 不可继续遍历的数据类型
 */
-const boolTag = '[object Boolean]'
-const dateTag = '[object Date]'
-const errorTag = '[object Error]'
-const numberTag = '[object Number]'
-const regexpTag = '[object RegExp]'
-const stringTag = '[object String]'
-const symbolTag = '[object Symbol]'
-const funcTag = '[object Function]'
+const boolTag = 'Boolean'
+const dateTag = 'Date'
+const errorTag = 'Error'
+const numberTag = 'Number'
+const regexpTag = 'RegExp'
+const stringTag = 'String'
+const symbolTag = 'Symbol'
+const funcTag = 'Function'
 
 /**
  * @description: 工具函数，克隆函数
@@ -55,16 +55,15 @@ function cloneFunction(func) {
  * @return {Symbol}
 */
 function cloneSymbol(target) {
-  return Object(Symbol.prototype.valueOf.call(target))
+  console.log(target.constructor)
+  return new target.constructor(target.description)
 }
 
 /**
  * @description: 工具函数，克隆正则
 */
 function cloneReg(target) {
-  const reFlags = /\w*$/
-  const result = new target.constructor(target.source, reFlags.exec(target))
-  result.lastIndex = target.lastIndex
+  const result = new target.constructor(target.source, target.flags)
   return result
 }
 
@@ -97,8 +96,9 @@ function cloneOtherType(target, type) {
  * @return {String}
  */
 function getType(target) {
-  return Object.prototype.toString.call(target)
+  return Object.prototype.toString.call(target).slice(8, -1)
 }
+
 /**
  * @description: 工具函数，初始化被克隆的对象
  * @return {String}
@@ -114,7 +114,8 @@ function getInit(target) {
 */
 function isObject(target) {
   const type = typeof target
-  return target !== null && (type === 'object' || type === 'function')
+  const isObj = target !== null && (type === 'object' || type === 'function')
+  return isObj
 }
 
 /**
@@ -132,61 +133,56 @@ function forEach(array, iteratee) {
 }
 
 function clone(target, map = new WeakMap()) {
-  const deepTag = [
-    mapTag,
-    setTag,
-    arrayTag,
-    objectTag,
-    arrayTag,
-  ]
-  
+  const deepTag = [ mapTag, setTag, arrayTag, objectTag, arrayTag ]
   // 原始类型直接返回
   if (!isObject(target)) {
     return target
   }
-
   // 根据不同类型进行操作
   const type = getType(target)
-  let cloneTarget
   if (deepTag.includes(type)) {
+    let cloneTarget
     cloneTarget = getInit(target)
+    // 防止循环引用
+    if (map.get(target)) {
+      return target
+    }
+    map.set(target, cloneTarget)
+    // 克隆set
+    if (type === setTag) {
+      target.forEach((value) => {
+        cloneTarget.add(clone(value))
+      })
+      return cloneTarget
+    }
+    // 克隆map
+    if (type === mapTag) {
+      target.forEach((value, key) => {
+        cloneTarget.set(key, clone(value))
+      })
+      return cloneTarget
+    }
+    // 克隆对象和数组
+    const isArray = Array.isArray(target)
+    const keys = isArray ? undefined : Object.keys(target)
+    forEach(keys || target, (value, key) => {
+      if (keys) {
+        key = value
+      }
+      cloneTarget[key] = clone(target[key], map)
+    })
+    return cloneTarget
   } else {
     return cloneOtherType(target, type)
   }
-
-  // 防止循环引用
-  if (map.get(target)) {
-    return target
-  }
-  map.set(target, cloneTarget)
-  
-  // 克隆set
-  if (type === setTag) {
-    target.forEach((value) => {
-      cloneTarget.add(clone(value))
-    })
-    return cloneTarget
-  }
-
-  // 克隆map
-  if (type === mapTag) {
-    target.forEach((value, key) => {
-      cloneTarget.set(key, clone(value))
-    })
-    return cloneTarget
-  }
-  
-  // 克隆对象和数组
-  const isArray = Array.isArray(target)
-  const keys = isArray ? undefined : Object.keys(target)
-  forEach(keys || target, (value, key) => {
-    if (keys) {
-      key = value
-    }
-    cloneTarget[key] = clone(target[key], map)
-  })
-  return cloneTarget
 }
+
+
+
+
+
+
+
 
 // 用例测试测试
 const map = new Map()
@@ -210,7 +206,7 @@ const target = {
   bool: Boolean(true),
   num: Number(2),
   str: String(2),
-  symbol: Object(Symbol(1)),
+  symbol: Symbol(1),
   date: Date(),
   reg: /\d+/,
   error: Error('出错了'),

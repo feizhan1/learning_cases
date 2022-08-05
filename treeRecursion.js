@@ -51,37 +51,37 @@ const routes = [
     component: () => 1,
     redirect: '/permission-manage/permission',
     name: 'Permission-manage',
-    meta: { title: '权限系统', icon: 'el-icon-folder-opened', roles: ['admin', 'editor'] },
+    meta: { title: '权限系统' },
     children: [
       {
         path: 'permission',
         component: () => 1,
         name: 'Permission',
-        meta: { title: '权限管理', icon: 'el-icon-folder', roles: ['admin'] }
+        meta: { title: '权限管理' }
       },
       {
         path: 'role',
         component: () => null,
         name: 'Role',
-        meta: { title: '角色管理', icon: 'el-icon-folder' },
+        meta: { title: '角色管理' },
         children: [
           {
             path: 'role_1',
             component: () => 1,
             name: 'Role_1',
-            meta: { title: 'role_1', icon: 'el-icon-folder', roles: ['admin'] }
+            meta: { title: 'role_1' }
           },
           {
             path: 'role_2',
             component: () => null,
             name: 'Role_2',
-            meta: { title: 'role_2', icon: 'el-icon-folder' }
+            meta: { title: 'role_2' }
           },
           {
             path: 'role_3',
             component: () => 3,
             name: 'Role_3',
-            meta: { title: 'role_3', roles: ['admin'], icon: 'el-icon-folder' }
+            meta: { title: 'role_3' }
           }
         ]
       },
@@ -89,7 +89,7 @@ const routes = [
         path: 'users',
         component: () => null,
         name: 'Users',
-        meta: { title: '用户管理', roles: ['admin'], icon: 'el-icon-folder' }
+        meta: { title: '用户管理' }
       }
     ]
   }
