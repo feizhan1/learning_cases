@@ -64,7 +64,7 @@
       gl.uniform4f(u_Color, color.r, color.g, color.b, color.a);
 
 
-      // 三角形顶点
+      // 线顶点
       var positions = [];
       // 颜色值
       var colors = [];
@@ -99,7 +99,7 @@
         var x = e.pageX;
         var y = e.pageY;
         positions.push(x, y);
-        if (positions.length % 6 === 0) {
+        if (positions.length > 0) {
           // 向缓冲区中复制新的顶点数据
           gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
           //重新渲染
@@ -114,12 +114,16 @@
         gl.clearColor(0, 0, 0, 1.0);
         //清除屏幕
         gl.clear(gl.COLOR_BUFFER_BIT);
-        // 绘制图元设置为三角形
-        var primitiveType = gl.TRIANGLES;
+        // 绘制图元设置为基本线段
+        // var primitiveType = gl.LINES;
+        // 绘制图元设置为基本线段带状
+        // var primitiveType = gl.LINE_STRIP;
+        // 绘制图元设置为基本线段环状
+        var primitiveType = gl.LINE_LOOP;
         // 从顶点数组的开始位置取顶点数据
         var drawOffset = 0;
         //因为我们要绘制 N 个点，所以执行 N 次顶点绘制操作
-        gl.drawArrays(primitiveType, drawOffset, positions.length / 2);
+        gl.drawArrays(primitiveType, drawOffset, positions.length/2);
       }
 
     }
