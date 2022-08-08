@@ -70,3 +70,115 @@ function loadTexture(gl, src, attribute, callback) {
   };
   img.src = src;
 }
+
+function resizeCanvas(canvas, width, height) {
+  if (canvas.width !== width) {
+    canvas.width = width ? width : window.innerWidth;
+
+  }
+  if (canvas.height !== height) {
+    canvas.height = height ? height : window.innerHeight;
+  }
+}
+
+function createSimpleProgramFromScript(gl, vertexScriptId, fragmentScriptId) {
+  let vertexShader = createShaderFromScript(
+    gl,
+    gl.VERTEX_SHADER,
+    vertexScriptId
+  );
+  let fragmentShader = createShaderFromScript(
+    gl,
+    gl.FRAGMENT_SHADER,
+    fragmentScriptId
+  );
+  let program = createSimpleProgram(gl, vertexShader, fragmentShader);
+  return program;
+}
+
+function createShaderFromScript(gl, type, scriptId) {
+  let sourceScript = $$('#' + scriptId);
+  if (!sourceScript) {
+    return null;
+  }
+  return createShader(gl, type, sourceScript.innerHTML);
+}
+
+function $$(str) {
+  if (!str) return null;
+  if (str.startsWith('#')) {
+    return document.querySelector(str);
+  }
+  let result = document.querySelectorAll(str);
+  if (result.length == 1) {
+    return result[0];
+  }
+  return result;
+}
+
+function getContext(canvas) {
+  return canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+}
+
+function createShader(gl, type, source) {
+  let shader = gl.createShader(type);
+  gl.shaderSource(shader, source);
+  gl.compileShader(shader);
+  //检测是否编译正常。
+  let success = gl.getShaderParameter(shader, gl.COMPILE_STATUS);
+  if (success) {
+    return shader;
+  }
+  console.error(gl.getShaderInfoLog(shader));
+  gl.deleteShader(shader);
+}
+
+function createSimpleProgram(gl, vertexShader, fragmentShader) {
+  if (!vertexShader || !fragmentShader) {
+    console.warn('着色器不能为空');
+    return;
+  }
+  let program = gl.createProgram();
+  gl.attachShader(program, vertexShader);
+  gl.attachShader(program, fragmentShader);
+  gl.linkProgram(program);
+  let success = gl.getProgramParameter(program, gl.LINK_STATUS);
+  if (success) {
+    return program;
+  }
+  console.error(gl.getProgramInfoLog(program));
+  gl.deleteProgram(program);
+}
+
+function requestAnimationFrame(render) {
+  let timer = null
+  if (timer) {
+    clearInterval(timer);
+    timer = null;
+  } else {
+    timer = setInterval(() => {
+      render()
+    }, 50);
+  }
+}
+
+function createColorForVertex(vertex, c) {
+  let vertexNums = vertex.positions;
+  let colors = [];
+  let color = c || {
+    r: 255,
+    g: 0,
+    b: 0,
+    a: 255
+  };
+
+  for (let i = 0; i < vertexNums.length; i++) {
+    color = c || randomColor();
+    colors.push(color.r, color.g, color.b, 255);
+  }
+
+  vertex.colors = new Uint8Array(colors);
+  return vertex;
+}
+
+

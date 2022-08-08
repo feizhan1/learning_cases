@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>球</title>
+  <style>
+    html, html body {
+      width: 100%;
+      height: 100%;
+    }
+    html body {
+      margin: 0;
+    }
+  </style>
+</head>
+<body>
+  <!-- 顶点着色器源码 -->
+  <script type="shader-source" id="vertexShader">
+    precision mediump float;
+    // 接收 JavaScript 传递过来的点的坐标（X, Y, Z）
+    attribute vec3 a_Position;
+    // 接收顶点颜色
+    attribute vec4 a_Color;
+    // 传往片元着色器的颜色
+    varying vec4 v_Color;
+    // 接收变换矩阵
+    uniform mat4 u_Matrix;
+    void main() {
+      gl_Position = u_Matrix * vec4(a_Position, 1);
+      v_Color = a_Color;
+    }
+  </script>
+  <!-- 片元着色器源码 -->
+  <script type="shader-source" id="fragmentShader">
+    precision mediump float;
+    // 接收Javascript传过来的颜色值（rgba）
+    varying vec4 v_Color;
+    void main() {
+      gl_FragColor = v_Color;
+    }
+  </script>
+  <canvas id="canvas"></canvas>
+  <!-- 引入封装方法 -->
+  <script src="./utils/index.js"></script>
+  <script src="./utils/math.js"></script>
+  <script src="./utils/webgl-matrix.js"></script>
+  <script src="./utils/geometry.js"></script>
+  <script>
+    window.onload = () => {
+      var canvas = document.querySelector('#canvas');
+      //设置canvas尺寸为满屏
+      resizeCanvas(canvas);
+      //获取绘图上下文
+      let gl = getContext(canvas);
+      //创建着色器程序
+      let program = createSimpleProgramFromScript(gl, 'vertexShader', 'fragmentShader');
+
+      // 使用刚创建好的着色器程序
+      gl.useProgram(program);
+
+      //顶点信息
+      var sphere = createSphere(5, 12, 12);
+      console.log(sphere, '---sphere1--')
+      sphere = transformIndicesToUnIndices(sphere);
+      console.log(sphere, '---sphere2--')
+      createColorForVertex(sphere);
+      var positions = sphere.positions;
+      var indices = sphere.normals;
+      var colors = sphere.colors;
+      console.log(sphere, '--sphere')
+
+      // 找到顶点着色器中的变量u_Matrix
+      var u_Matrix = gl.getUniformLocation(program, 'u_Matrix');
+
+      // 找到顶点着色器中的变量a_Position
+      var a_Position = gl.getAttribLocation(program, 'a_Position');
+      // 启用对应属性 a_Position
+      gl.enableVertexAttribArray(a_Position);
+      // 创建一个positions缓冲区
+      var positionsbuffer = gl.createBuffer();
+      // 绑定缓冲区为当前缓冲
+      gl.bindBuffer(gl.ARRAY_BUFFER, positionsbuffer);
+      // 设置从缓冲区中取数据的方式
+      // 设置 a_Position 属性从缓冲区读取数据方式
+      gl.vertexAttribPointer(a_Position, 3, gl.FLOAT, false, 0, 0);
+      // 向缓冲区传递数据
+      gl.bufferData(gl.ARRAY_BUFFER, positions, gl.STATIC_DRAW);
+
+
+      // 找到顶点着色器中的变量a_Color
+      var a_Color = gl.getAttribLocation(program, 'a_Color');
+      // 启用对应属性 a_Position
+      gl.enableVertexAttribArray(a_Color);
+      // 创建一个colors缓冲区
+      var colorsbuffer = gl.createBuffer();
+      // 绑定缓冲区为当前缓冲
+      gl.bindBuffer(gl.ARRAY_BUFFER, colorsbuffer);
+      // 设置 a_Color 属性从缓冲区读取数据方式
+      gl.vertexAttribPointer(a_Color, 4, gl.FLOAT, false, 0, 0);
+      // 向缓冲区传递数据
+      gl.bufferData(gl.ARRAY_BUFFER, colors, gl.STATIC_DRAW);
+
+
+      //创建索引缓冲区
+      // let indicesBuffer = gl.createBuffer();
+      // //绑定索引缓冲区
+      // gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indicesBuffer);
+      // //向索引缓冲区传递索引数据
+      // gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW);
+
+
+      // 设置清屏颜色为黑色
+      gl.clearColor(0, 0, 0, 1);
+      gl.enable(gl.DEPTH_TEST);
+      // 隐藏背面
+      gl.enable(gl.CULL_FACE);
+
+
+
+      var aspect = canvas.width / canvas.height;
+      //计算正交投影矩阵
+      var projectionMatrix = matrix.ortho(-aspect * 4, aspect * 4, -4, 4, 100, -100);
+      var deg2radians = window.lib3d.math.deg2radians;
+      var dstMatrix = matrix.identity();
+      var xAngle =0;
+      var yAngle = 0;
+      var tmpMatrix = matrix.identity();
+      var timer = null;
+      /*渲染*/
+      function render() {
+        xAngle +=1;
+        yAngle +=1;
+        //先绕 Y 轴旋转矩阵。
+        matrix.rotationY(deg2radians(yAngle), dstMatrix);
+        //再绕 X 轴旋转
+        matrix.multiply(dstMatrix, matrix.rotationX(deg2radians(xAngle), tmpMatrix), dstMatrix);
+        //模型投影矩阵。
+        matrix.multiply(projectionMatrix, dstMatrix, dstMatrix);
+
+        gl.uniformMatrix4fv(u_Matrix, false, dstMatrix);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        gl.drawArrays(gl.TRIANGLES, 0, positions.length/3);
+      }
+      function animate() {
+        if (timer) {
+          clearInterval(timer);
+          timer = null;
+        } else {
+          timer = setInterval(() => {
+            render()
+          }, 50)
+        }
+      }
+      animate()
+
+    }
+  </script>
+</body>
+</html>
