@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>3D</title>
+  <style>
+    html, html body {
+      width: 100%;
+      height: 100%;
+    }
+    html body {
+      margin: 0;
+    }
+  </style>
+</head>
+<body>
+  <!-- 顶点着色器源码 -->
+  <script type="shader-source" id="vertexShader">
+    precision mediump float;
+    // 接收点在canvas坐标系上的坐标(x,y)
+    attribute vec2 a_Position;
+    // 接收canvas尺寸
+    attribute vec2 a_Screen_Size;
+    // 接收Javascript传过来的颜色值（rgba）
+    attribute vec4 a_Color;
+    // 传往片元着色器的颜色
+    varying vec4 v_Color;
+    void main() {
+      vec2 position = (a_Position / a_Screen_Size) * 2.0 - 1.0;
+      position = position * vec2(1.0, -1.0);
+      gl_Position = vec4(position, 0, 1);
+      v_Color = a_Color;
+    }
+  </script>
+  <!-- 片元着色器源码 -->
+  <script type="shader-source" id="fragmentShader">
+    precision mediump float;
+    // 接收Javascript传过来的颜色值（rgba）
+    varying vec4 v_Color;
+    void main() {
+      vec4 color = v_Color / vec4(255, 255, 255, 1);
+      gl_FragColor = color;
+    }
+  </script>
+  <canvas id="canvas"></canvas>
+  <!-- 引入封装方法 -->
+  <script src="./utils/index.js"></script>
+  <script>
+    window.onload = () => {
+      var canvas = document.querySelector('#canvas');
+      var body = document.querySelector('body');
+      canvas.width = body.clientWidth;
+      canvas.height = body.clientHeight;
+
+
+      var gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+
+      // 创建顶点着色器
+      var vertexShader = createShaderFromScript(gl, gl.VERTEX_SHADER, '#vertexShader');
+
+      // 创建片元着色器
+      var fragmentShader = createShaderFromScript(gl, gl.FRAGMENT_SHADER,'#fragmentShader');
+
+      // 创建着色器程序
+      var program = createProgram(gl ,vertexShader, fragmentShader);
+
+      // 使用刚创建好的着色器程序
+      gl.useProgram(program);
+
+      // 找到顶点着色器中的变量a_Screen_Size
+      var a_Screen_Size = gl.getAttribLocation(program, 'a_Screen_Size');
+      console.log(canvas.width, canvas.height)
+      // 为顶点着色器中的a_Screen_Size传递canvas的宽高信息
+      gl.vertexAttrib2f(a_Screen_Size, canvas.width, canvas.height);
+
+      // 正方体8个顶点的坐标信息
+      let zeroX = 0.5;
+      let zeroY = 0.5;
+      let zeroZ = 0.5;
+      var positions = [
+        [-zeroX, -zeroY, zeroZ],  //V0
+        [zeroX, -zeroY, zeroZ],  //V1
+        [zeroX, zeroY, zeroZ],   //V2
+        [-zeroX, zeroY, zeroZ],  //V3
+        [-zeroX, -zeroY, -zeroZ],//V4
+        [-zeroX, zeroY, -zeroZ], //V5
+        [zeroX, zeroY, -zeroZ],  //V6
+        [zeroX, -zeroY, -zeroZ]  //V7
+      ];
+      // 六个面包含的顶点索引
+      const CUBE_FACE_INDICES = [
+        [0, 1, 2, 3], //前面
+        [4, 5, 6, 7], //后面
+        [0, 3, 5, 4], //左面
+        [1, 7, 6, 2], //右面
+        [3, 2, 6, 5], //上面
+        [0, 4, 7, 1] // 下面
+      ];
+      // 定义六个面的颜色信息
+      const FACE_COLORS = [
+        [1, 0, 0, 1], // 前面，红色
+        [0, 1, 0, 1], // 后面，绿色
+        [0, 0, 1, 1], // 左面，蓝色
+        [1, 1, 0, 1], // 右面，黄色
+        [1, 0, 1, 1], // 上面，品色
+        [0, 1, 1, 1]  // 下面，青色
+      ];
+
+      /**
+       * 有了顶点坐标和颜色信息，接下来我们写一个方法生成立方体的顶点属性。
+       * 该方法接收三个参数：宽度、高度、深度，返回一个包含组成立方体的顶点坐标、颜色、索引的对象
+      */
+      function createCube(width, height, depth) {
+        let zeroX = width / 2;
+        let zeroY = height / 2;
+        let zeroZ = depth / 2;
+
+        let cornerPositions = [
+          [-zeroX, -zeroY, -zeroZ],
+          [zeroX, -zeroY, -zeroZ],
+          [zeroX, zeroY, -zeroZ],
+          [-zeroX, zeroY, -zeroZ],
+          [-zeroX, -zeroY, zeroZ],
+          [-zeroX, zeroY, zeroZ],
+          [zeroX, zeroY, zeroZ],
+          [zeroX, -zeroY, zeroZ]
+        ];
+        let colorInput = [
+          [255, 0, 0, 1],
+          [0, 255, 0, 1],
+          [0, 0, 255, 1],
+          [255, 255, 0, 1],
+          [0, 255, 255, 1],
+          [255, 0, 255, 1]
+        ];
+
+        let colors = [];
+        let positions = [];
+        var indices = [];
+
+        for (let f = 0; f < 6; ++f) {
+          let faceIndices = CUBE_FACE_INDICES[f];
+          let color = colorInput[f];
+          for (let v = 0; v < 4; ++v) {
+            let position = cornerPositions[faceIndices[v]];
+            positions = positions.concat(position);
+            colors = colors.concat(color);
+          }
+          let offset = 4 * f;
+          indices.push(offset + 0, offset + 1, offset + 2);
+          indices.push(offset + 0, offset + 2, offset + 3);
+        }
+        indices = new Uint16Array(indices);
+        positions = new Float32Array(positions);
+        colors = new Float32Array(colors);
+        return {
+          positions: positions,
+          indices: indices,
+          colors: colors
+        };
+      } 
+
+      var cube = createCube(1, 1, 1);
+      console.log(cube, '--cube')
+
+
+      // 找到顶点着色器中的变量a_Position
+      var a_Position = gl.getAttribLocation(program, 'a_Position');
+      // 启用对应属性 a_Position
+      gl.enableVertexAttribArray(a_Position);
+      // 找到顶点着色器中的变量a_Color
+      var a_Color = gl.getAttribLocation(program, 'a_Color');
+      // 启用对应属性 a_Position
+      gl.enableVertexAttribArray(a_Color);
+
+
+      // 创建一个positions缓冲区
+      var positionsbuffer = gl.createBuffer();
+      // 绑定缓冲区为当前缓冲
+      gl.bindBuffer(gl.ARRAY_BUFFER, positionsbuffer);
+      // 设置从缓冲区中取数据的方式
+      // 设置 a_Position 属性从缓冲区读取数据方式
+      gl.vertexAttribPointer(a_Position, 2, gl.FLOAT, false, 24, 0);
+      // 向缓冲区传递数据
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(cube.positions), gl.STATIC_DRAW);
+
+
+
+      // 创建一个colors缓冲区
+      var colorsbuffer = gl.createBuffer();
+      // 绑定缓冲区为当前缓冲
+      gl.bindBuffer(gl.ARRAY_BUFFER, colorsbuffer);
+      // 设置 a_Color 属性从缓冲区读取数据方式
+      gl.vertexAttribPointer(a_Color, 4, gl.FLOAT, false, 24, 0);
+      // 向缓冲区传递数据
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(cube.colors), gl.STATIC_DRAW);
+
+
+      //定义绘制索引数组
+      let indices = cube.indices;
+      //创建索引缓冲区
+      let indicesBuffer = gl.createBuffer();
+      //绑定索引缓冲区
+      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indicesBuffer);
+      //向索引缓冲区传递索引数据
+      gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(cube.indices), gl.STATIC_DRAW);
+
+
+      // 渲染函数
+      function render(gl) {
+        //设置屏幕清除颜色为黑色。
+        gl.clearColor(0, 0, 0, 1.0);
+        //清除屏幕
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        gl.drawElements(gl.TRIANGLES, cube.indices.length, gl.UNSIGNED_SHORT, 0);
+      }
+
+      render(gl);
+
+    }
+  </script>
+</body>
+</html>
