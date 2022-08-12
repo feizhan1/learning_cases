@@ -4,7 +4,8 @@
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>webgl</title>
+  <title>绘制三角形</title>
+  <link rel="stylesheet" href="./assets/css/normalize.css">
 </head>
 <body>
   <!-- 顶点着色器源码 -->
@@ -35,15 +36,17 @@
   <script src="./utils/index.js"></script>
   <script>
     window.onload = () => {
-      var canvas = document.querySelector('#canvas');
+      var canvas = $$('canvas');
+      resizeCanvas(canvas);
+
 
       var gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
 
       // 创建顶点着色器
-      var vertexShader = createShaderFromScript(gl, gl.VERTEX_SHADER, '#vertexShader');
+      var vertexShader = createShaderFromScript(gl, gl.VERTEX_SHADER, 'vertexShader');
 
       // 创建片元着色器
-      var fragmentShader = createShaderFromScript(gl, gl.FRAGMENT_SHADER,'#fragmentShader');
+      var fragmentShader = createShaderFromScript(gl, gl.FRAGMENT_SHADER,'fragmentShader');
 
       // 创建着色器程序
       var program = createProgram(gl ,vertexShader, fragmentShader);
@@ -66,8 +69,6 @@
 
       // 三角形顶点
       var positions = [];
-      // 颜色值
-      var colors = [];
       // 找到顶点着色器中的变量a_Position
       var a_Position = gl.getAttribLocation(program, 'a_Position');
       // 创建一个缓冲区

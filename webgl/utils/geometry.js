@@ -146,6 +146,12 @@ function createWing(topWidth, bottomWidth, height, depth) {
   };
 }
 
+/**
+ * @description 创建立方体
+ * @param {Number} width 长
+ * @param {Number} height 宽
+ * @param {Number} depth 高
+*/
 function createCube(width, height, depth) {
   let zeroX = width / 2;
   let zeroY = height / 2;
@@ -213,6 +219,13 @@ function createCube(width, height, depth) {
     texcoords: texcoords
   };
 }
+/**
+ * @description 创建长立方体
+ * @param {Number} width 长
+ * @param {Number} height 宽
+ * @param {Number} depth 高
+ * @param {Number} repeatCount 重复数量
+*/
 function createLongCube(width, height, depth, repeatCount) {
   let zeroX = width / 2;
   let zeroY = height / 2;
@@ -302,6 +315,13 @@ function createLongCube(width, height, depth, repeatCount) {
     texcoords: texcoords
   };
 }
+
+/**
+ * @description 创建球体
+ * @param {Number} divideByYAxis  纬度等分数
+ * @param {Number} divideByCircle  纬度等分数
+ * @retunrs {{positions: Float32[], indices: Float16[], normals: Float32[]}}
+*/
 function createSphere(radius, divideByYAxis, divideByCircle) {
   let yUnitAngle = Math.PI / divideByYAxis;
   let circleUnitAngle = (Math.PI * 2) / divideByCircle;
@@ -341,6 +361,15 @@ function createSphere(radius, divideByYAxis, divideByCircle) {
   };
 }
 
+/**
+ * @description 创建圆柱体
+ * @param {Number} topRadius 顶部半径
+ * @param {Number} bottomRadius 底部半径
+ * @param {Number} height 高
+ * @param {Number} bottomDivide 横截面的切分数量
+ * @param {Number} verticalDivide 垂直方向的切分数量
+ * @param {Number} verticalDivide 垂直方向的切分数量
+*/
 function createCone(
   topRadius,
   bottomRadius,

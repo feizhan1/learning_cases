@@ -5,15 +5,8 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>rectangleByTriangleFan</title>
-  <style>
-    html, html body {
-      width: 100%;
-      height: 100%;
-    }
-    html body {
-      margin: 0;
-    }
-  </style>
+  <title>矩形(三角带)</title>
+  <link rel="stylesheet" href="./assets/css/normalize.css">
 </head>
 <body>
   <!-- 顶点着色器源码 -->
@@ -49,19 +42,16 @@
   <script src="./utils/index.js"></script>
   <script>
     window.onload = () => {
-      var canvas = document.querySelector('#canvas');
-      var body = document.querySelector('body');
-      canvas.width = body.clientWidth;
-      canvas.height = body.clientHeight;
-
+      var canvas = $$('canvas');
+      resizeCanvas(canvas);
 
       var gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
 
       // 创建顶点着色器
-      var vertexShader = createShaderFromScript(gl, gl.VERTEX_SHADER, '#vertexShader');
+      var vertexShader = createShaderFromScript(gl, gl.VERTEX_SHADER, 'vertexShader');
 
       // 创建片元着色器
-      var fragmentShader = createShaderFromScript(gl, gl.FRAGMENT_SHADER,'#fragmentShader');
+      var fragmentShader = createShaderFromScript(gl, gl.FRAGMENT_SHADER,'fragmentShader');
 
       // 创建着色器程序
       var program = createProgram(gl ,vertexShader, fragmentShader);
@@ -75,25 +65,13 @@
       // 为顶点着色器中的a_Screen_Size传递canvas的宽高信息
       gl.vertexAttrib2f(a_Screen_Size, canvas.width, canvas.height);
 
-
-      // 找到片元着色器中的变量u_Color
-      var u_Color = gl.getUniformLocation(program, 'u_Color');
-      //向片元着色器传递颜色信息
-      var color = randomColor();
-      gl.uniform4f(u_Color, color.r, color.g, color.b, color.a);
-
-
       // 三角形顶点
       var positions = [
-        165, 165, 255, 255, 0, 1, //V0
-        30, 30, 255, 0, 0, 1,    //V1
-        30, 300, 255, 0, 0, 1,   //V2
-        300, 300, 255, 0, 0, 1,  //V3
-        300, 30, 0, 255, 0, 1,   //V4
-        30, 30, 255, 0, 0, 1,    //V1
+        30, 30, 255, 0, 0, 1,    //V0
+        30, 300, 255, 0, 0, 1,   //V1
+        300, 300, 255, 0, 0, 1,  //V2
+        300, 30, 0, 255, 0, 1    //V3
       ];
-      // 颜色值
-      var colors = [];
       // 找到顶点着色器中的变量a_Position
       var a_Position = gl.getAttribLocation(program, 'a_Position');
       // 找到顶点着色器中的变量a_Color
@@ -124,31 +102,28 @@
       gl.vertexAttribPointer(a_Position, 2, gl.FLOAT, false, 24, 0);
       // 设置 a_Color 属性从缓冲区读取数据方式
       gl.vertexAttribPointer(a_Color, 4, gl.FLOAT, false, 24, 8);
-
       // 向缓冲区传递数据
       gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
 
-
-      // // 渲染函数
+      // 渲染函数
       function render(gl) {
-        //设置屏幕清除颜色为黑色。
-        gl.clearColor(0, 0, 0, 1.0);
         //清除屏幕
         gl.clear(gl.COLOR_BUFFER_BIT);
         // 指定绘制图元的类型，是画点，还是画线，或者是画三角形
-        // var mode = gl.TRIANGLES;
+        var mode = gl.TRIANGLES;
         // 指定绘制图形的顶点个数
-        // var count = 6;
+        var count = 6;
         // 指定索引缓冲区中的值的类型
-        // var type = gl.UNSIGNED_BYTE;
+        var type = gl.UNSIGNED_BYTE;
         //指定索引数组中开始绘制的位置，以字节为单位
-        // var offset = 0
-        gl.drawArrays(gl.TRIANGLE_FAN, 0, positions.length / 6);
+        var offset = 0
+        gl.drawArrays(gl.TRIANGLE_FAN, 0, 4);
 
       }
 
-      render(gl)
-
+      //设置屏幕清除颜色为黑色。
+      gl.clearColor(0, 0, 0, 1.0);
+      render(gl);
     }
   </script>
 </body>

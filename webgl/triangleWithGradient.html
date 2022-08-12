@@ -4,16 +4,8 @@
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>webgl</title>
-  <style>
-    html, html body {
-      width: 100%;
-      height: 100%;
-    }
-    html body {
-      margin: 0;
-    }
-  </style>
+  <title>渐变三角形</title>
+  <link rel="stylesheet" href="./assets/css/normalize.css">
 </head>
 <body>
   <!-- 顶点着色器源码 -->
@@ -49,19 +41,17 @@
   <script src="./utils/index.js"></script>
   <script>
     window.onload = () => {
-      var canvas = document.querySelector('#canvas');
-      var body = document.querySelector('body');
-      canvas.width = body.clientWidth;
-      canvas.height = body.clientHeight;
+      var canvas = $$('canvas');
+      resizeCanvas(canvas);
 
 
       var gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
 
       // 创建顶点着色器
-      var vertexShader = createShaderFromScript(gl, gl.VERTEX_SHADER, '#vertexShader');
+      var vertexShader = createShaderFromScript(gl, gl.VERTEX_SHADER, 'vertexShader');
 
       // 创建片元着色器
-      var fragmentShader = createShaderFromScript(gl, gl.FRAGMENT_SHADER,'#fragmentShader');
+      var fragmentShader = createShaderFromScript(gl, gl.FRAGMENT_SHADER,'fragmentShader');
 
       // 创建着色器程序
       var program = createProgram(gl ,vertexShader, fragmentShader);
@@ -71,22 +61,11 @@
 
       // 找到顶点着色器中的变量a_Screen_Size
       var a_Screen_Size = gl.getAttribLocation(program, 'a_Screen_Size');
-      console.log(canvas.width, canvas.height)
       // 为顶点着色器中的a_Screen_Size传递canvas的宽高信息
       gl.vertexAttrib2f(a_Screen_Size, canvas.width, canvas.height);
 
-
-      // 找到片元着色器中的变量u_Color
-      var u_Color = gl.getUniformLocation(program, 'u_Color');
-      //向片元着色器传递颜色信息
-      var color = randomColor();
-      gl.uniform4f(u_Color, color.r, color.g, color.b, color.a);
-
-
       // 三角形顶点
       var positions = [];
-      // 颜色值
-      var colors = [];
       // 找到顶点着色器中的变量a_Position
       var a_Position = gl.getAttribLocation(program, 'a_Position');
       // 找到顶点着色器中的变量a_Color
@@ -95,8 +74,6 @@
       var buffer = gl.createBuffer();
       // 绑定缓冲区
       gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-      // 接下来往当前缓冲区（即上一步通过 bindBuffer 绑定的缓冲区）中写入数据。
-      // gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
       // 告诉 WebGL 如何从之前创建的缓冲区中获取数据，并且传递给顶点着色器中的 a_Position 属性。 那么，首先启用对应属性 a_Position
       gl.enableVertexAttribArray(a_Position);
       // 告诉 WebGL 如何从之前创建的缓冲区中获取数据，并且传递给顶点着色器中的 a_Color 属性。 那么，首先启用对应属性 a_Color
@@ -136,12 +113,10 @@
           render(gl);
         }
       })
-      render(gl)
+      
 
-      // // 渲染函数
+      // 渲染函数
       function render(gl) {
-        //设置屏幕清除颜色为黑色。
-        gl.clearColor(0, 0, 0, 1.0);
         //清除屏幕
         gl.clear(gl.COLOR_BUFFER_BIT);
         // 绘制图元设置为三角形
@@ -152,6 +127,9 @@
         gl.drawArrays(primitiveType, drawOffset, positions.length / 6);
       }
 
+      //设置屏幕清除颜色为黑色。
+      gl.clearColor(0, 0, 0, 1.0);
+      render(gl);
     }
   </script>
 </body>

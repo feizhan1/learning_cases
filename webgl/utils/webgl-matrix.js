@@ -1,7 +1,6 @@
 (function(window) {
   /**
    *单位矩阵
-   *
    * @param {*} target
    */
   function identity(target) {
@@ -18,7 +17,6 @@
 
   /**
    *初始化矩阵
-   *
    * @param {*} source，已有数组
    * @param {*} target
    * @returns
@@ -38,8 +36,7 @@
   }
 
   /**
-   *矩阵相乘  next * prev;
-   *
+   * @description 矩阵相乘  next * prev;
    * @param {*} next
    * @param {*} prev
    * @param {*} target
@@ -114,8 +111,7 @@
     return target;
   }
   /**
-   *矩阵相乘  next * prev;
-   *
+   * @description 矩阵相乘  next * prev;
    * @param {*} next
    * @param {*} prev
    * @param {*} target
@@ -147,8 +143,7 @@
     return target;
   }
   /**
-   *平移矩阵
-   *
+   * @description 平移矩阵
    * @param {*} tx
    * @param {*} ty
    * @param {*} tz
@@ -172,8 +167,7 @@
   }
 
   /**
-   *先平移，再执行 m 的合成矩阵。
-   *
+   * @description 先平移，再执行 m 的合成矩阵。
    * @param {*} m
    * @param {*} tx
    * @param {*} ty
@@ -221,8 +215,7 @@
   }
 
   /**
-   *饶 X 轴旋转矩阵
-   *
+   * @description 饶 X 轴旋转矩阵
    * @param {*} angle
    * @param {*} target
    * @returns
@@ -253,14 +246,13 @@
   }
 
   /**
-   *饶 Y 轴旋转矩阵。
-   *
+   * @description 饶 Y 轴旋转矩阵
    * @param {*} angle
    * @param {*} target
    * @returns
    */
   function rotationY(angle, target) {
-    target = target || new Float32Array(16);
+    var target = target || new Float32Array(16);
     var sin = Math.sin(angle);
     var cos = Math.cos(angle);
 
@@ -285,8 +277,7 @@
   }
 
   /**
-   *饶 Z 轴旋转矩阵
-   *
+   * @description 饶 Z 轴旋转矩阵
    * @param {*} angle
    * @param {*} target
    * @returns
@@ -317,7 +308,8 @@
   }
 
   function rotateX(m, angle, target) {
-    target = traget || new Float32Array(16);
+    // console.log(target, '--target')
+    var target = new Float32Array(16);
 
     var m10 = m[4];
     var m11 = m[5];
@@ -491,6 +483,7 @@
    * @returns
    */
   function lookAt(cameraPosition, lookTarget, upDirection, target) {
+    var Vector3 = window.lib3d.Vector3;
     var target = target || new Float32Array(16);
     let zAxis = Vector3.normalize(
       Vector3.subtractVectors(cameraPosition, lookTarget)
@@ -612,8 +605,7 @@
   }
 
   /**
-   *逆矩阵
-   *
+   * @description 逆矩阵
    * @param {*} m
    * @param {*} target
    * @returns
@@ -820,8 +812,7 @@
   }
 
   /**
-   *克隆矩阵。
-   *
+   * @description 克隆矩阵
    * @param {*} source
    * @param {*} target
    * @returns
@@ -1081,45 +1072,6 @@
     target[15] = 1;
     return target;
   }
-  function rotateX(m, angleInRadians, target) {
-    // this is the optimized version of
-    // return multiply(m, xRotation(angleInRadians), dst);
-    target = target || new Float32Array(16);
-
-    var m10 = m[4];
-    var m11 = m[5];
-    var m12 = m[6];
-    var m13 = m[7];
-    var m20 = m[8];
-    var m21 = m[9];
-    var m22 = m[10];
-    var m23 = m[11];
-    var c = Math.cos(angleInRadians);
-    var s = Math.sin(angleInRadians);
-
-    target[4] = c * m10 + s * m20;
-    target[5] = c * m11 + s * m21;
-    target[6] = c * m12 + s * m22;
-    target[7] = c * m13 + s * m23;
-    target[8] = c * m20 - s * m10;
-    target[9] = c * m21 - s * m11;
-    target[10] = c * m22 - s * m12;
-    target[11] = c * m23 - s * m13;
-
-    if (m !== target) {
-      target[0] = m[0];
-      target[1] = m[1];
-      target[2] = m[2];
-      target[3] = m[3];
-      target[12] = m[12];
-      target[13] = m[13];
-      target[14] = m[14];
-      target[15] = m[15];
-    }
-
-    return target;
-  }
-
   function applyMatrix(v, m) {
     var x = v.x,
       y = v.y,
@@ -1186,7 +1138,6 @@
     perspectiveOfRect: perspectiveOfRect,
     identity: identity,
     initialize: initialize,
-    lookAt: lookAt,
     rotationX: rotationX,
     rotationY: rotationY,
     rotationZ: rotationZ,

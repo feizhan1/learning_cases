@@ -45,6 +45,10 @@ function createProgram(gl, vertexShader, fragmentShader ) {
   }
 }
 
+/**
+ * @description 获取随机色
+ * @returns {{r: Number, g: Number, b: Number, a: Number}} rgba(r,g,b,a)
+*/
 function randomColor() {
   var random = Math.random;
   return {
@@ -55,6 +59,13 @@ function randomColor() {
   };
 }
 
+/**
+ * @description 加载纹理，加载一张图片到内存，完成后，执行回调内容
+ * @param {Object} gl 绘图上下文
+ * @param {String} src 图片url
+ * @param {Object} attribute 着色器变量
+ * @param {Function} callback 回调函数
+*/
 function loadTexture(gl, src, attribute, callback) {
   let img = new Image();
   img.crossOrigin = 'anonymous';
@@ -71,6 +82,12 @@ function loadTexture(gl, src, attribute, callback) {
   img.src = src;
 }
 
+/**
+ * @description 设置canvas绘图尺寸
+ * @param {Object} canvas 绘图对象
+ * @param {Number} width 宽度
+ * @param {Number} height 高度
+*/
 function resizeCanvas(canvas, width, height) {
   if (canvas.width !== width) {
     canvas.width = width ? width : window.innerWidth;
@@ -81,6 +98,12 @@ function resizeCanvas(canvas, width, height) {
   }
 }
 
+/**
+ * @description 通过脚本创建着色器程序
+ * @param {String} vertexScriptId 顶点脚本id
+ * @param {String} fragmentScriptId 片元脚本id
+ * @returns {Object} 着色器程序
+*/
 function createSimpleProgramFromScript(gl, vertexScriptId, fragmentScriptId) {
   let vertexShader = createShaderFromScript(
     gl,
@@ -96,6 +119,13 @@ function createSimpleProgramFromScript(gl, vertexScriptId, fragmentScriptId) {
   return program;
 }
 
+/**
+ * @description 通过脚本创建着色器
+ * @param {Object} gl 绘图上下文
+ * @param {Object} type 着色器类型
+ * @param {String} scriptId 脚本id
+ * @returns {Object} 着色器
+*/
 function createShaderFromScript(gl, type, scriptId) {
   let sourceScript = $$('#' + scriptId);
   if (!sourceScript) {
@@ -104,6 +134,10 @@ function createShaderFromScript(gl, type, scriptId) {
   return createShader(gl, type, sourceScript.innerHTML);
 }
 
+/**
+ * @description 获取元素
+ * @param {String} str 元素id
+*/
 function $$(str) {
   if (!str) return null;
   if (str.startsWith('#')) {
@@ -116,10 +150,20 @@ function $$(str) {
   return result;
 }
 
+/**
+ * @description 获取绘图上下文
+ * @param {Object} canvas 绘图对象
+*/
 function getContext(canvas) {
   return canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
 }
 
+/**
+ * @description 创建着色器
+ * @param {Object} gl 绘图上下文
+ * @param {Object} type 着色器类型
+ * @param {String} source 着色器代码
+*/
 function createShader(gl, type, source) {
   let shader = gl.createShader(type);
   gl.shaderSource(shader, source);
@@ -133,6 +177,13 @@ function createShader(gl, type, source) {
   gl.deleteShader(shader);
 }
 
+/**
+ * @description 创建着色器程序
+ * @param {Object} gl 绘图上下文
+ * @param {Object} vertexShader 顶点着色器
+ * @param {Object} fragmentShader 片元着色器
+ * @returns {Object} 着色器程序
+*/
 function createSimpleProgram(gl, vertexShader, fragmentShader) {
   if (!vertexShader || !fragmentShader) {
     console.warn('着色器不能为空');

@@ -4,7 +4,8 @@
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>webgl</title>
+  <title>绘制点</title>
+  <link rel="stylesheet" href="./assets/css/normalize.css">
 </head>
 <body>
   <!-- 顶点着色器源码 -->
@@ -39,14 +40,17 @@
   <script src="./utils/index.js"></script>
   <script>
     window.onload = () => {
-      var canvas = document.querySelector('#canvas');
+      var canvas = $$('canvas');
+      resizeCanvas(canvas);
+
       var gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
 
+
       // 创建顶点着色器
-      var vertexShader = createShaderFromScript(gl, gl.VERTEX_SHADER, '#vertexShader');
+      var vertexShader = createShaderFromScript(gl, gl.VERTEX_SHADER, 'vertexShader');
 
       // 创建片元着色器
-      var fragmentShader = createShaderFromScript(gl, gl.FRAGMENT_SHADER,'#fragmentShader');
+      var fragmentShader = createShaderFromScript(gl, gl.FRAGMENT_SHADER,'fragmentShader');
 
       // 创建着色器程序
       var program = createProgram(gl ,vertexShader, fragmentShader);
@@ -68,6 +72,7 @@
       canvas.addEventListener('click', e => {
         var x = e.pageX;
         var y = e.pageY;
+        console.log(x, y, '----')
         var color = randomColor();
         points.push({x: x, y: y, color: color});
         render(gl);

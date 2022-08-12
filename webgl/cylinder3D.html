@@ -4,35 +4,38 @@
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>立方体-球</title>
-  <link rel="stylesheet" href="./assets/css/normalize.css">
-  <style>
-    body {
-      position: relative;
-    }
-    .operation-container {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-    }
-
-  </style>
+  <title>绘制圆柱体3D</title>
 </head>
 <body>
   <!-- 顶点着色器源码 -->
   <script type="shader-source" id="vertexShader">
     precision mediump float;
-    // 接收 JavaScript 传递过来的点的坐标（X, Y, Z）
-    attribute vec3 a_Position;
-    // 接收顶点颜色
+    // 顶点坐标
+    attribute vec4 a_Position;
+    // 顶点颜色
     attribute vec4 a_Color;
-    // 传往片元着色器的颜色
+    // 顶点法向量
+    attribute vec3 a_Normal;
+    // 传递给片元着色器的法向量
+    varying vec3 v_Normal;
+    // 传递给片元着色器的颜色
     varying vec4 v_Color;
     // 接收变换矩阵
     uniform mat4 u_Matrix;
+    varying vec3 v_Position;
+    //法线变换矩阵
+    uniform mat4 u_NormalMatrix;
+    //模型变换矩阵
+    uniform mat4 u_ModelMatrix;
     void main() {
+      // 将顶点坐标转化成裁剪坐标系下的坐标
       gl_Position = u_Matrix * vec4(a_Position, 1);
+      // 将顶点颜色传递给片元着色器
       v_Color = a_Color;
+      // 将顶点法向量传递给片元着色器
+      v_Normal = mat3(u_NormalMatrix) * a_Normal;
+      //
+      v_Position = vec3(u_ModelMatrix * vec4(a_Position,1));
     }
   </script>
   <!-- 片元着色器源码 -->
@@ -40,8 +43,29 @@
     precision mediump float;
     // 接收Javascript传过来的颜色值（rgba）
     varying vec4 v_Color;
+    // 光线颜色
+    uniform vec3 u_LightColor;
+    // 环境光分量
+    uniform float u_AmbientFactor;
+    // 光源位置
+    uniform vec3 u_LightPosition;
+    // 光线入射位置
+    varying vec3 v_Position; 
+    // 片元法向量
+    varying vec3 v_Normal;
     void main() {
-      gl_FragColor = v_Color;
+      // 环境光分量
+      vec3 ambient = u_AmbientFactor * u_LightColor;
+      // 光源照射方向向量
+      vec3 lightDirection = u_LightPosition - v_Position;
+      // 漫反射因子
+      float diffuseFactor = dot(normalize(lightDirection), normalize(v_Normal));
+      // 如果是负数，说明光线与法向量夹角大于 90 度，此时照不到平面上，所以没有光照，即黑色
+      diffuseFactor = max(diffuseFactor, 0.0);
+      // 漫反射光照 = 光源颜色 * 漫反射因子。
+      vec3 diffuseLightColor = u_LightColor * diffuseFactor;
+      // 物体在光照下的颜色 = （环境光照 + 漫反射光照） * 物体颜色
+      gl_FragColor = vec4((ambient + diffuseLightColor),1) * v_Color;
     }
   </script>
   <canvas id="canvas"></canvas>
@@ -57,10 +81,9 @@
   <script>
     window.onload = () => {
       var Vector3 = window.lib3d.Vector3;
-      var canvas = $$('canvas');
+      var canvas = document.querySelector('#canvas');
       //设置canvas尺寸为满屏
       resizeCanvas(canvas);
-
       //获取绘图上下文
       let gl = getContext(canvas);
       //创建着色器程序
@@ -68,12 +91,29 @@
       //使用刚创建好的着色器程序
       gl.useProgram(program);
 
+      var normalInput = [
+        [0, 0, 1],  //前平面
+        [0, 0, -1], //后平面
+        [-1, 0, 0], //左平面
+        [1, 0, 0], //右平面
+        [0, 1, 0], //上平面
+        [0, -1, 0] //下平面
+      ];
+
       //顶点信息
-      var sphere = createSphere(5, 12, 12);
-      sphere = transformIndicesToUnIndices(sphere);
-      createColorForVertex(sphere);
-      var positions = sphere.positions;
-      var colors = sphere.colors;
+      let cube = createCube(10, 10, 10);
+      var positions = cube.positions;
+      var colors = cube.colors;
+      var indices = cube.indices;
+
+      // 设置光源位置
+      var u_LightPosition = gl.getUniformLocation(program, 'u_LightPosition');
+      gl.uniform3f(u_LightPosition, 0, 0, 10);
+
+      // 设置光源颜色为白色
+      var u_LightColor = gl.getUniformLocation(program, 'u_LightColor');
+      gl.uniform3f(u_LightColor, 1, 1, 1);
+
 
       // 找到顶点着色器中的变量u_Matrix
       var u_Matrix = gl.getUniformLocation(program, 'u_Matrix');
@@ -91,7 +131,6 @@
       var cameraMatrix = matrix.lookAt(cameraPosition, target, up);
       var viewMatrix = matrix.inverse(cameraMatrix);
       var viewProjectionMatrix = matrix.multiply(projectionMatrix, viewMatrix);
-
       gl.uniformMatrix4fv(u_Matrix, false, viewProjectionMatrix);
 
       // 找到顶点着色器中的变量a_Position
@@ -122,25 +161,35 @@
       gl.bufferData(gl.ARRAY_BUFFER, colors, gl.STATIC_DRAW);
 
 
-      /*渲染*/
-      function render() {
-        gl.clear(gl.COLOR_BUFFER_BIT);
-        gl.drawArrays(gl.TRIANGLES, 0, positions.length / 3);
-      }
+      //创建索引缓冲区
+      let indicesBuffer = gl.createBuffer();
+      //绑定索引缓冲区
+      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indicesBuffer);
+      //向索引缓冲区传递索引数据
+      gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
 
       //设置清屏颜色
       gl.clearColor(0, 0, 0, 1.0);
       gl.enable(gl.DEPTH_TEST);
       gl.enable(gl.CULL_FACE);
+      // 首次渲染执行
+      render(gl);
 
+      // 渲染函数
+      function render() {
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        gl.drawArrays(gl.TRIANGLES, 0, positions.length / 3);
+      }
+      
+      // 后续渲染阶段
       var yAngle = 0;
       var xAngle = 0;
       var timer = null;
       var matrixX = matrix.identity();
       var matrixY = matrix.identity();
-
+      // 监听点击事件执行动画
       $$('#switchButton').addEventListener('click', animate);
-
+      // 动画函数
       function animate(e) {
         if (timer) {
           clearInterval(timer);
@@ -160,7 +209,6 @@
           }, 50);
         }
       }
-      render(gl);
     }
   </script>
 </body>
