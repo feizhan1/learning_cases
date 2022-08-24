@@ -80,28 +80,25 @@ const goods = {
   ]
 }
 
-const list = goods.json2
-const targets = ['红色', 'M', '棉的']
-
-
-function customFilter() {
+function customFilter(list, targets) {
   let result = null
-  const recursion = function(choice, arr) {
-    for (let index = 0; index < choice.length; index++) {
-      const target = choice[index]
-      const filterArr = arr.filter((item)=> {
-        const isIncludes = Object.values(item).includes(target)
-        return isIncludes
-      })
+
+  const recursion = function(list, targets) {
+    for (let index = 0; index < targets.length; index++) {
+      const target = targets[index]
+      const filterArr = list.filter((item)=> Object.values(item).includes(target))
       if (filterArr.length > 1) {
-        recursion(choice.slice(index+1), filterArr)
+        recursion(filterArr, targets.slice(index+1))
       } else if (filterArr.length === 1) {
         result = filterArr[0]
       }
     }
   }
-  recursion(targets, list)
+
+  recursion(list, targets)
   return result
 }
 
-console.log(customFilter())
+const filterResult = customFilter(goods.json2, ['红色', 'S', '棉的'])
+
+console.log(filterResult, '--filterResult')

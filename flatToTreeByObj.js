@@ -14,9 +14,8 @@ function flatToTreeByObj(items) {
   }
   console.log(JSON.stringify(itemMap))
   for (const item of items) {
-    const id = item.id
     const pid = item.pid
-    const node = itemMap[id]
+    const node = itemMap[item.id]
     if(pid === 0) {
       result.push(node)
     } else {
