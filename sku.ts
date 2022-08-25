@@ -80,25 +80,24 @@ const goods = {
   ]
 }
 
-function customFilter(list, targets) {
-  let result = null
-
-  const recursion = function(list, targets) {
-    for (let index = 0; index < targets.length; index++) {
-      const target = targets[index]
-      const filterArr = list.filter((item)=> Object.values(item).includes(target))
-      if (filterArr.length > 1) {
-        recursion(filterArr, targets.slice(index+1))
-      } else if (filterArr.length === 1) {
-        result = filterArr[0]
-      }
-    }
-  }
-
-  recursion(list, targets)
-  return result
+interface Goods {
+  color: string,
+  type: string,
+  mianliao: string,
+  price: number
 }
 
-const filterResult = customFilter(goods.json2, ['红色', 'S', '棉的'])
+function customFilter(list: Goods[], targets: string[]):Goods | undefined {
+  const target = targets[0]
+  const filterArr = list.filter((item)=> Object.values(item).includes(target))
+  if (filterArr.length > 1) {
+    return customFilter(filterArr, targets.slice(1))
+  } else {
+    return list[0]
+  }
+}
 
-console.log(filterResult, '--filterResult')
+const goodsList = goods.json2
+const goodsResult = customFilter(goodsList, ['红色', 'S', '棉的'])
+
+console.log(goodsResult, '--goodsResult')
